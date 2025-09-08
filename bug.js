@@ -1329,33 +1329,31 @@ const purge = {
 };
 const demoteall = {
   name: "demoteall",
-  description: "Rétrograder tous les admins du groupe (sauf bot et owner)",
+  description: "Rétrograder tous les admins en membres normaux",
   execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Commande uniquement utilisable dans un groupe." }, { quoted: msg });
+    }
+
+    // Vérif si bot est admin
+    const groupMetadata = await sock.groupMetadata(from);
+    const botNumber = sock.user.id.split(":")[0] + "@s.whatsapp.net";
+    const botInGroup = groupMetadata.participants.find(p => p.id === botNumber);
+    if (!botInGroup?.admin) {
+      return sock.sendMessage(from, { text: "⚠️ Je dois être admin pour rétrograder des membres." }, { quoted: msg });
+    }
+
+    const admins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
     try {
-      const { meta, isMeAdmin, isYouAdmin, me } = await ensureGroupAndAdmins(sock, msg, from);
-      if (!isYouAdmin) {
-        return sock.sendMessage(from, { text: "❌ Seuls les admins peuvent utiliser demoteall." }, { quoted: msg });
-      }
-      if (!isMeAdmin) {
-        return sock.sendMessage(from, { text: "❌ Je dois être admin pour rétrograder." }, { quoted: msg });
-      }
-
-      const toDemote = meta.participants
-        .filter(p => p.admin && p.id !== me) // évite de se retirer soi-même
-        .map(p => p.id);
-
-      if (!toDemote.length) {
-        return sock.sendMessage(from, { text: "⚠️ Aucun admin à rétrograder (hors bot)." }, { quoted: msg });
-      }
-
-      await sock.groupParticipantsUpdate(from, toDemote, "demote");
-      await sock.sendMessage(from, { text: `✅ ${toDemote.length} admins rétrogradés.` }, { quoted: msg });
+      await sock.groupParticipantsUpdate(from, admins, "demote");
+      await sock.sendMessage(from, { text: "✅ Tous les admins ont été rétrogradés en membres normaux." }, { quoted: msg });
     } catch (err) {
       console.error("Erreur demoteall:", err);
-      await sock.sendMessage(from, { text: "⚠️ Erreur lors de demoteall." }, { quoted: msg });
+      await sock.sendMessage(from, { text: "⚠️ Impossible de rétrograder tous les membres." }, { quoted: msg });
     }
   },
 };
+
 const mute = {
   name: "mute",
   description: "Empêche les membres d'écrire dans le groupe",
@@ -1395,60 +1393,18 @@ const promote = {
   description: "Promouvoir un membre en admin",
   execute: async (sock, msg, args, from) => {
     if (!from.endsWith("@g.us")) {
-      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+      return sock.sendMessage(from, { text: "❌ Commande uniquement utilisable dans un groupe." }, { quoted: msg });
     }
 
-    if (!args[0]) {
-      return sock.sendMessage(from, { text: "📌 Exemple : !promote 237xxxxxxxx" }, { quoted: msg });
+    // Vérif si bot est admin
+    const groupMetadata = await sock.groupMetadata(from);
+    const botNumber = sock.user.id.split(":")[0] + "@s.whatsapp.net";
+    const botInGroup = groupMetadata.participants.find(p => p.id === botNumber);
+    if (!botInGroup?.admin) {
+      return sock.sendMessage(from, { text: "⚠️ Je dois être admin pour promouvoir des membres." }, { quoted: msg });
     }
 
-    try {
-      const target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
-      await sock.groupParticipantsUpdate(from, [target], "promote");
-
-      await sock.sendMessage(from, { text: `✅ ${args[0]} promu admin.` }, { quoted: msg });
-    } catch (err) {
-      console.error("Erreur promote:", err);
-      await sock.sendMessage(from, { text: "⚠️ Impossible de promouvoir cet utilisateur." }, { quoted: msg });
-    }
-  },
-};
-const demote = {
-  name: "demote",
-  description: "Rétrograder un admin en membre",
-  execute: async (sock, msg, args, from) => {
-    if (!from.endsWith("@g.us")) {
-      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
-    }
-
-    if (!args[0]) {
-      return sock.sendMessage(from, { text: "📌 Exemple : !demote 237xxxxxxxx" }, { quoted: msg });
-    }
-
-    try {
-      const target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
-      await sock.groupParticipantsUpdate(from, [target], "demote");
-
-      await sock.sendMessage(from, { text: `✅ ${args[0]} rétrogradé en membre.` }, { quoted: msg });
-    } catch (err) {
-      console.error("Erreur demote:", err);
-      await sock.sendMessage(from, { text: "⚠️ Impossible de rétrograder cet utilisateur." }, { quoted: msg });
-    }
-  },
-};
-const kick = {
-  name: "kick",
-  description: "Expulser un membre du groupe (numéro, mention ou reply)",
-  execute: async (sock, msg, args, from) => {
-    if (!from.endsWith("@g.us")) {
-      return sock.sendMessage(
-        from,
-        { text: "❌ Cette commande doit être utilisée dans un groupe." },
-        { quoted: msg }
-      );
-    }
-
-    // Détecter le target
+    // Détection cible
     let target;
     if (args[0]) {
       target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
@@ -1459,34 +1415,99 @@ const kick = {
     }
 
     if (!target) {
-      return sock.sendMessage(
-        from,
-        { text: "📌 Exemple : !kick 237xxxx ou mentionnez/répondez à un membre" },
-        { quoted: msg }
-      );
+      return sock.sendMessage(from, { text: "📌 Exemple : !promote 237xxxx ou mentionnez/répondez à un membre" }, { quoted: msg });
+    }
+
+    try {
+      await sock.groupParticipantsUpdate(from, [target], "promote");
+      await sock.sendMessage(from, { text: `✅ Promu admin : @${target.split("@")[0]}`, mentions: [target] }, { quoted: msg });
+    } catch (err) {
+      console.error("Erreur promote:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de promouvoir cet utilisateur." }, { quoted: msg });
+    }
+  },
+};
+
+const demote = {
+  name: "demote",
+  description: "Rétrograder un admin en membre normal",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Commande uniquement utilisable dans un groupe." }, { quoted: msg });
+    }
+
+    // Vérif si bot est admin
+    const groupMetadata = await sock.groupMetadata(from);
+    const botNumber = sock.user.id.split(":")[0] + "@s.whatsapp.net";
+    const botInGroup = groupMetadata.participants.find(p => p.id === botNumber);
+    if (!botInGroup?.admin) {
+      return sock.sendMessage(from, { text: "⚠️ Je dois être admin pour rétrograder des membres." }, { quoted: msg });
+    }
+
+    // Détection cible
+    let target;
+    if (args[0]) {
+      target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+    } else if (msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]) {
+      target = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+    } else if (msg.message?.extendedTextMessage?.contextInfo?.participant) {
+      target = msg.message.extendedTextMessage.contextInfo.participant;
+    }
+
+    if (!target) {
+      return sock.sendMessage(from, { text: "📌 Exemple : !demote 237xxxx ou mentionnez/répondez à un membre" }, { quoted: msg });
+    }
+
+    try {
+      await sock.groupParticipantsUpdate(from, [target], "demote");
+      await sock.sendMessage(from, { text: `✅ Rétrogradé : @${target.split("@")[0]}`, mentions: [target] }, { quoted: msg });
+    } catch (err) {
+      console.error("Erreur demote:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de rétrograder cet utilisateur." }, { quoted: msg });
+    }
+  },
+};
+
+const kick = {
+  name: "kick",
+  description: "Expulser un membre du groupe (numéro, mention ou reply)",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Commande uniquement utilisable dans un groupe." }, { quoted: msg });
+    }
+
+    // Vérifier si bot est admin
+    const groupMetadata = await sock.groupMetadata(from);
+    const botNumber = sock.user.id.split(":")[0] + "@s.whatsapp.net";
+    const botInGroup = groupMetadata.participants.find(p => p.id === botNumber);
+    if (!botInGroup?.admin) {
+      return sock.sendMessage(from, { text: "⚠️ Je dois être admin pour expulser des membres." }, { quoted: msg });
+    }
+
+    // Détecter la cible
+    let target;
+    if (args[0]) {
+      target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+    } else if (msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]) {
+      target = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
+    } else if (msg.message?.extendedTextMessage?.contextInfo?.participant) {
+      target = msg.message.extendedTextMessage.contextInfo.participant;
+    }
+
+    if (!target) {
+      return sock.sendMessage(from, { text: "📌 Exemple : !kick 237xxxx ou mentionnez/répondez à un membre" }, { quoted: msg });
     }
 
     try {
       await sock.groupParticipantsUpdate(from, [target], "remove");
-
-      await sock.sendMessage(
-        from,
-        {
-          text: `✅ Utilisateur expulsé : @${target.split("@")[0]}`,
-          mentions: [target],
-        },
-        { quoted: msg }
-      );
+      await sock.sendMessage(from, { text: `✅ Expulsé : @${target.split("@")[0]}`, mentions: [target] }, { quoted: msg });
     } catch (err) {
       console.error("Erreur kick:", err);
-      await sock.sendMessage(
-        from,
-        { text: "⚠️ Impossible d’expulser cet utilisateur." },
-        { quoted: msg }
-      );
+      await sock.sendMessage(from, { text: "⚠️ Impossible d’expulser cet utilisateur." }, { quoted: msg });
     }
   },
 };
+
 
 const leave = {
   name: "leave",
@@ -1505,25 +1526,30 @@ const leave = {
 };
 const promoteall = {
   name: "promoteall",
-  description: "Promouvoir tous les membres du groupe en admins",
+  description: "Promouvoir tous les membres en admin",
   execute: async (sock, msg, args, from) => {
     if (!from.endsWith("@g.us")) {
-      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+      return sock.sendMessage(from, { text: "❌ Commande uniquement utilisable dans un groupe." }, { quoted: msg });
     }
 
+    // Vérif si bot est admin
+    const groupMetadata = await sock.groupMetadata(from);
+    const botNumber = sock.user.id.split(":")[0] + "@s.whatsapp.net";
+    const botInGroup = groupMetadata.participants.find(p => p.id === botNumber);
+    if (!botInGroup?.admin) {
+      return sock.sendMessage(from, { text: "⚠️ Je dois être admin pour promouvoir des membres." }, { quoted: msg });
+    }
+
+    const members = groupMetadata.participants.map(p => p.id);
     try {
-      const groupMetadata = await sock.groupMetadata(from);
-      const participants = groupMetadata.participants.map(p => p.id);
-
-      await sock.groupParticipantsUpdate(from, participants, "promote");
-      await sock.sendMessage(from, { text: `✅ Tous les membres de *${groupMetadata.subject}* sont maintenant admins.` });
+      await sock.groupParticipantsUpdate(from, members, "promote");
+      await sock.sendMessage(from, { text: "✅ Tous les membres ont été promus admin." }, { quoted: msg });
     } catch (err) {
-      console.error("❌ Erreur promoteall:", err);
-      await sock.sendMessage(from, { text: "⚠️ Impossible de promouvoir tous les membres." });
+      console.error("Erreur promoteall:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de promouvoir tous les membres." }, { quoted: msg });
     }
-  }
+  },
 };
-
 
 // === Bloodfield ===
 const bloodfield = {
