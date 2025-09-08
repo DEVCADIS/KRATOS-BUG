@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: kratos-bug
+    env: node
+    buildCommand: "npm install"
+    startCommand: "node index.js"
+    plan: free
+    envVars:
+      - key: PREFIXE
+        value: "."
+      - key: SESSION
+        value: "./session"
+      - key: NUMBER
+        value: "237xxxx"
+      - key: USE_QR
+        value: "false"
+      - key: LOG_LEVEL
+        value: "info"
+      - key: RECONNECT_DELAY
+        value: "5000"
