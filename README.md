@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/banner.jpeg" alt="KRATOS-BUG Banner" width="90%"/>
+  <img src="assets/kratos-banner.jpeg" alt="KRATOS-BUG Banner" width="90%"/>
 </p>
 
 # ⚡ KRATOS-BUG ⚡
@@ -28,10 +28,10 @@ Il a été conçu pour **analyser les failles WhatsApp** liées aux bugs de mess
 
 ---
 
-📱 Installation sur Termux (Android)
+## 📱 Installation sur Termux (Android)
 
 Si tu veux utiliser KRATOS-BUG directement sur Android via Termux :
-```TERMUX 
+```bash
 pkg update && pkg upgrade
 pkg install git nodejs -y
 git clone https://github.com/DEVCADIS/KRATOS-BUG.git
