@@ -13,7 +13,7 @@
 
 ## 🔥 Présentation
 
-**KRATOS-BUG** est un **bug bot WhatsApp by RAIZEL**, basé sur **Node.js** et **Baileys**.  
+**KRATOS-BUG** est un **bug bot WhatsApp developpé by RAIZEL**, basé sur **Node.js** et **Baileys**.  
 
 
 ## 📱 Installation sur Termux (Android)
