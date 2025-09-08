@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import path from "path";
-import { default as webp } from "node-webpmux";
+import webp from "node-webpmux";
 import fs from "fs";
 import axios from "axios";
 
