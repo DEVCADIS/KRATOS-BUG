@@ -1,6 +1,12 @@
 // ===================== BUG COMMANDS FULL =====================
 import { generateWAMessageFromContent, proto } from "@whiskeysockets/baileys";
 import crypto from "crypto";
+import { writeFileSync, unlinkSync } from "fs";
+import { tmpdir } from "os";
+import path from "path";
+import { default as webp } from "node-webpmux";
+import fs from "fs";
+import axios from "axios";
 
 // ===================== HELPERS =====================
 export const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1190,6 +1196,23 @@ const menu = {
 │ kickall  
 │ tagall  
 │ purge  
+│ sticker
+│ take
+│ vv
+│ tag
+│ pp
+│ gpp
+│ photo
+│ toaudio
+│ mute
+│ unmute
+│ kick
+│ leave
+│ add
+│ promote
+| demote
+| promoteall
+| demoteall
 ╰──────────────────────╯
     `;
 
@@ -1313,7 +1336,437 @@ const purge = {
     }, 3000);
   },
 };
+const sticker = {
+  name: "sticker",
+  description: "Convertit une image ou vidéo en sticker",
+  execute: async (sock, msg, args, from) => {
+    try {
+      const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
+      if (!quoted) {
+        return sock.sendMessage(from, { text: "❌ Réponds à une *image/vidéo* avec la commande !sticker" }, { quoted: msg });
+      }
+
+      let type;
+      if (quoted.imageMessage) type = "image";
+      else if (quoted.videoMessage) type = "video";
+      else type = null;
+
+      if (!type) {
+        return sock.sendMessage(from, { text: "⚠️ Message cité non valide. Utilise sur une image ou vidéo." }, { quoted: msg });
+      }
+
+      const buffer = await sock.downloadMediaMessage({ message: quoted });
+
+      await sock.sendMessage(from, { sticker: buffer }, { quoted: msg });
+
+    } catch (err) {
+      console.error("❌ Erreur commande sticker :", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de générer le sticker." }, { quoted: msg });
+    }
+  },
+};
+const vv = {
+  name: "vv",
+  description: "Télécharge et renvoie image, vidéo ou audio (même view once)",
+  execute: async (sock, msg, args, from) => {
+    try {
+      const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+      if (!quoted) {
+        return sock.sendMessage(
+          from,
+          { text: "❌ Réponds à une *image/vidéo/audio* avec la commande !vv" },
+          { quoted: msg }
+        );
+      }
+
+      let type;
+      if (quoted.videoMessage) type = "video";
+      else if (quoted.imageMessage) type = "image";
+      else if (quoted.audioMessage) type = "audio";
+      else type = null;
+
+      if (!type) {
+        return sock.sendMessage(
+          from,
+          { text: "⚠️ Message cité non valide. Utilise sur une image, vidéo ou audio." },
+          { quoted: msg }
+        );
+      }
+
+      // Télécharger le média
+      const buffer = await sock.downloadMediaMessage({ message: quoted });
+
+      // Options par type
+      const opts = {};
+      if (type === "audio") opts.mimetype = "audio/mpeg";
+
+      // Renvoyer le média
+      await sock.sendMessage(
+        from,
+        {
+          [type]: buffer,
+          caption: type !== "audio" ? "⚡ Voici ton média en VV" : undefined,
+          ...opts,
+        },
+        { quoted: msg }
+      );
+
+      console.log(`✅ Commande vv exécutée sur un ${type}`);
+    } catch (err) {
+      console.error("❌ Erreur commande vv :", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de traiter le média." }, { quoted: msg });
+    }
+  },
+};
+const take = {
+  name: "take",
+  description: "Reprend un sticker et change son nom/auteur",
+  execute: async (sock, msg, args, from) => {
+    try {
+      const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+      if (!quoted?.stickerMessage) {
+        return sock.sendMessage(
+          from,
+          { text: "❌ Réponds à un *sticker* avec la commande !take [nom|auteur]" },
+          { quoted: msg }
+        );
+      }
+
+      // Récupérer texte -> nom & auteur
+      const [packname, author] = args.join(" ").split("|").map(v => v.trim());
+      const stickerPack = packname || "⚡ KRATOS BUG";
+      const stickerAuthor = author || "👑 DEV RAIZEL";
+
+      // Télécharger le sticker
+      const buffer = await sock.downloadMediaMessage({ message: quoted });
+
+      // Fichier temporaire
+      const tmpIn = path.join(tmpdir(), `sticker_in_${Date.now()}.webp`);
+      const tmpOut = path.join(tmpdir(), `sticker_out_${Date.now()}.webp`);
+      writeFileSync(tmpIn, buffer);
+
+      // Modifier les métadonnées WebP
+      const img = new webp.Image();
+      await img.load(tmpIn);
+      img.exif = webp.Exif.fromMetadata({
+        "sticker-pack-id": "kratos-bug",
+        "sticker-pack-name": stickerPack,
+        "sticker-pack-publisher": stickerAuthor,
+      });
+      await img.save(tmpOut);
+
+      // Lire et renvoyer le sticker modifié
+      const finalBuffer = require("fs").readFileSync(tmpOut);
+      await sock.sendMessage(from, { sticker: finalBuffer }, { quoted: msg });
+
+      // Nettoyer fichiers temporaires
+      unlinkSync(tmpIn);
+      unlinkSync(tmpOut);
+
+      console.log(`✅ Sticker take → ${stickerPack} | ${stickerAuthor}`);
+    } catch (err) {
+      console.error("❌ Erreur commande take :", err);
+      await sock.sendMessage(from, { text: "⚠️ Erreur lors du traitement du sticker." }, { quoted: msg });
+    }
+  },
+};
+const tag = {
+  name: "tag",
+  description: "Mentionne tout le monde dans le groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+    }
+
+    try {
+      const metadata = await sock.groupMetadata(from);
+      const participants = metadata.participants.map(p => p.id);
+
+      // Message personnalisé
+      let text = `📢 *Tag de groupe par RAIZEL* ⚡\n\n`;
+      text += args.length > 0 ? args.join(" ") + "\n\n" : "👉 Invocation de tous les membres :\n";
+
+      participants.forEach(id => {
+        text += `➤ @${id.split("@")[0]}\n`;
+      });
+
+      // Envoi avec mentions
+      await sock.sendMessage(from, {
+        text,
+        mentions: participants
+      }, { quoted: msg });
+
+    } catch (err) {
+      console.error("❌ Erreur commande tag :", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de taguer tout le monde." }, { quoted: msg });
+    }
+  }
+};
+const pp = {
+  name: "pp",
+  description: "Changer la photo de profil du bot",
+  execute: async (sock, msg, args, from) => {
+    try {
+      if (!args[0]) {
+        return sock.sendMessage(from, { text: "📌 Exemple : !pp https://i.ibb.co/image.jpg" }, { quoted: msg });
+      }
+
+      const url = args[0];
+      const response = await axios.get(url, { responseType: "arraybuffer" });
+      const buffer = Buffer.from(response.data, "binary");
+
+      await sock.updateProfilePicture(sock.user.id, buffer);
+
+      await sock.sendMessage(from, { text: "✅ Photo de profil mise à jour avec succès !" }, { quoted: msg });
+    } catch (err) {
+      console.error("❌ Erreur commande pp:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de changer la photo de profil." }, { quoted: msg });
+    }
+  }
+};
+const gpp = {
+  name: "gpp",
+  description: "Changer la photo de profil du groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Cette commande ne peut être utilisée que dans un groupe." }, { quoted: msg });
+    }
+
+    try {
+      if (!args[0]) {
+        return sock.sendMessage(from, { text: "📌 Exemple : !gpp https://i.ibb.co/image.jpg" }, { quoted: msg });
+      }
+
+      const url = args[0];
+      const response = await axios.get(url, { responseType: "arraybuffer" });
+      const buffer = Buffer.from(response.data, "binary");
+
+      await sock.updateProfilePicture(from, buffer);
+
+      await sock.sendMessage(from, { text: "✅ Photo de profil du groupe mise à jour !" }, { quoted: msg });
+    } catch (err) {
+      console.error("❌ Erreur commande gpp:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de changer la photo de profil du groupe." }, { quoted: msg });
+    }
+  }
+};
+
+const toaudio = {
+  name: "toaudio",
+  description: "Convertir une vidéo ou un audio PTT en fichier audio",
+  execute: async (sock, msg, args, from) => {
+    try {
+      const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      const audioOrVideo = quoted?.videoMessage || quoted?.audioMessage;
+
+      if (!audioOrVideo) {
+        return sock.sendMessage(from, { text: "❌ Réponds à une *vidéo* ou un *audio PTT* avec !toaudio" }, { quoted: msg });
+      }
+
+      // Télécharger le média
+      const buffer = await sock.downloadMediaMessage({ message: audioOrVideo });
+
+      // Envoyer comme audio normal
+      await sock.sendMessage(from, { audio: buffer, mimetype: "audio/mp4" }, { quoted: msg });
+
+    } catch (err) {
+      console.error("❌ Erreur commande toaudio:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de convertir en audio." }, { quoted: msg });
+    }
+  }
+};
+const photo = {
+  name: "photo",
+  description: "Convertir un sticker en photo",
+  execute: async (sock, msg, args, from) => {
+    try {
+      const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      const quotedSticker = quoted?.stickerMessage;
+
+      if (!quotedSticker) {
+        return sock.sendMessage(from, { text: "❌ Réponds à un *sticker* avec la commande !photo" }, { quoted: msg });
+      }
+
+      // Télécharger le sticker
+      const buffer = await sock.downloadMediaMessage({ message: quotedSticker });
+
+      // Envoyer en tant qu'image
+      await sock.sendMessage(from, { image: buffer, caption: "✅ Voici ta photo." }, { quoted: msg });
+    } catch (err) {
+      console.error("❌ Erreur commande photo:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de convertir en photo." }, { quoted: msg });
+    }
+  }
+};
+const mute = {
+  name: "mute",
+  description: "Empêche les membres d'écrire dans le groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+    }
+
+    try {
+      await sock.groupSettingUpdate(from, "announcement"); // seul admin peut écrire
+      await sock.sendMessage(from, { text: "🔒 Le groupe a été *muté* (seuls les admins peuvent écrire)." });
+    } catch (err) {
+      console.error("❌ Erreur mute:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de mute le groupe." });
+    }
+  }
+};
+const unmute = {
+  name: "unmute",
+  description: "Permet à tous les membres d'écrire dans le groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+    }
+
+    try {
+      await sock.groupSettingUpdate(from, "not_announcement"); // tout le monde peut écrire
+      await sock.sendMessage(from, { text: "🔓 Le groupe a été *démuté* (tout le monde peut écrire)." });
+    } catch (err) {
+      console.error("❌ Erreur unmute:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de unmute le groupe." });
+    }
+  }
+};
+const promote = {
+  name: "promote",
+  description: "Donne les droits d’admin à un membre",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) return sock.sendMessage(from, { text: "❌ Utilisable uniquement dans un groupe." }, { quoted: msg });
+    if (!args[0]) return sock.sendMessage(from, { text: "📌 Exemple : !promote 237xxxxxxxx" }, { quoted: msg });
+
+    let target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+
+    try {
+      await sock.groupParticipantsUpdate(from, [target], "promote");
+      await sock.sendMessage(from, { text: `✅ ${args[0]} est maintenant *admin*.` });
+    } catch (err) {
+      console.error("❌ Erreur promote:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de promouvoir ce membre." });
+    }
+  }
+};
+const demote = {
+  name: "demote",
+  description: "Retire les droits d’admin d’un membre",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) return sock.sendMessage(from, { text: "❌ Utilisable uniquement dans un groupe." }, { quoted: msg });
+    if (!args[0]) return sock.sendMessage(from, { text: "📌 Exemple : !demote 237xxxxxxxx" }, { quoted: msg });
+
+    let target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+
+    try {
+      await sock.groupParticipantsUpdate(from, [target], "demote");
+      await sock.sendMessage(from, { text: `✅ ${args[0]} n’est plus admin.` });
+    } catch (err) {
+      console.error("❌ Erreur demote:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de rétrograder ce membre." });
+    }
+  }
+};
+const kick = {
+  name: "kick",
+  description: "Expulse un membre du groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) return sock.sendMessage(from, { text: "❌ Utilisable uniquement dans un groupe." }, { quoted: msg });
+    if (!args[0]) return sock.sendMessage(from, { text: "📌 Exemple : !kick 237xxxxxxxx" }, { quoted: msg });
+
+    let target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+
+    try {
+      await sock.groupParticipantsUpdate(from, [target], "remove");
+      await sock.sendMessage(from, { text: `🚪 ${args[0]} a été expulsé.` });
+    } catch (err) {
+      console.error("❌ Erreur kick:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible d’expulser ce membre." });
+    }
+  }
+};
+const add = {
+  name: "add",
+  description: "Ajoute un membre dans le groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) return sock.sendMessage(from, { text: "❌ Utilisable uniquement dans un groupe." }, { quoted: msg });
+    if (!args[0]) return sock.sendMessage(from, { text: "📌 Exemple : !add 237xxxxxxxx" }, { quoted: msg });
+
+    let target = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+
+    try {
+      await sock.groupParticipantsUpdate(from, [target], "add");
+      await sock.sendMessage(from, { text: `✅ ${args[0]} a été ajouté dans le groupe.` });
+    } catch (err) {
+      console.error("❌ Erreur add:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible d’ajouter ce membre." });
+    }
+  }
+};
+const leave = {
+  name: "leave",
+  description: "Fait quitter le bot du groupe",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) return sock.sendMessage(from, { text: "❌ Utilisable uniquement dans un groupe." }, { quoted: msg });
+
+    try {
+      await sock.sendMessage(from, { text: "👋 Je quitte le groupe..." });
+      await sock.groupLeave(from);
+    } catch (err) {
+      console.error("❌ Erreur leave:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de quitter le groupe." });
+    }
+  }
+};
+const promoteall = {
+  name: "promoteall",
+  description: "Promouvoir tous les membres du groupe en admins",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+    }
+
+    try {
+      const groupMetadata = await sock.groupMetadata(from);
+      const participants = groupMetadata.participants.map(p => p.id);
+
+      await sock.groupParticipantsUpdate(from, participants, "promote");
+      await sock.sendMessage(from, { text: `✅ Tous les membres de *${groupMetadata.subject}* sont maintenant admins.` });
+    } catch (err) {
+      console.error("❌ Erreur promoteall:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de promouvoir tous les membres." });
+    }
+  }
+};
+const demoteall = {
+  name: "demoteall",
+  description: "Retirer les droits d’admin de tous les membres sauf le propriétaire",
+  execute: async (sock, msg, args, from) => {
+    if (!from.endsWith("@g.us")) {
+      return sock.sendMessage(from, { text: "❌ Cette commande doit être utilisée dans un groupe." }, { quoted: msg });
+    }
+
+    try {
+      const groupMetadata = await sock.groupMetadata(from);
+
+      // ⚡ Exclure l’owner (toi)
+      const ownerNum = global.owners ? global.owners[0] : null;
+      const participants = groupMetadata.participants
+        .map(p => p.id)
+        .filter(jid => !jid.includes(ownerNum));
+
+      await sock.groupParticipantsUpdate(from, participants, "demote");
+      await sock.sendMessage(from, { text: `✅ Tous les admins de *${groupMetadata.subject}* ont été rétrogradés sauf l’owner.` });
+    } catch (err) {
+      console.error("❌ Erreur demoteall:", err);
+      await sock.sendMessage(from, { text: "⚠️ Impossible de rétrograder tous les membres." });
+    }
+  }
+};
 
 // === Bloodfield ===
 const bloodfield = {
@@ -1728,5 +2181,22 @@ export default [
   tagall,
   kickall,
   purge,
-  ping
+  ping,
+  mute,
+  unmute,
+  promote,
+  demote,
+  promoteall,
+  demoteall,
+  kick,
+  add,
+  leave,
+  sticker,
+  take,
+  vv,
+  tag,
+  toaudio,
+  photo,
+  pp,
+  gpp
 ];
