@@ -1,6 +1,1 @@
-PREFIXE=.
-SESSION=./session
-NUMBER=237xxxx
-USE_QR=false
-LOG_LEVEL=info
-RECONNECT_DELAY=5000
+
