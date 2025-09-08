@@ -1,7 +1,6 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/DEVCADIS/KRATOS-BUG/main/assets/kratos-banner.jpeg" alt="KRATOS-BUG Banner" width="90%"/>
 </p>
-
 # ⚡ KRATOS-BUG ⚡
 
 [![Stars](https://img.shields.io/github/stars/DEVCADIS/KRATOS-BUG?style=social)](https://github.com/DEVCADIS/KRATOS-BUG/stargazers)
