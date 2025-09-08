@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="assets/logo.jpeg" alt="KRATOS-BUG Logo" width="200"/>
+</p>
+
+<p align="center">
   <img src="assets/banner.jpeg" alt="KRATOS-BUG Banner" width="90%"/>
 </p>
 
@@ -14,31 +18,23 @@
 
 ## 🔥 Présentation
 
-**KRATOS-BUG** est un **bot WhatsApp de test et protection**, basé sur **Node.js** et **Baileys**.  
+**KRATOS-BUG** est un **bug bot WhatsApp de test et protection**, basé sur **Node.js** et **Baileys**.  
 Il a été conçu pour **analyser les failles WhatsApp** liées aux bugs de messages, et permettre à la fois :  
 
-- 💣 **Tester la stabilité** d’un compte ou d’un groupe WhatsApp (via l’envoi de bugs de test)  
-- ⚡ **Simuler des attaques bug** afin de comprendre leurs effets (freeze, lag, crash temporaire)  
-- 🛡️ **Activer un système anti-bug** pour bloquer et filtrer les attaques entrantes  
-- 🔧 **Fournir un outil éducatif** aux développeurs souhaitant comprendre ce type de vulnérabilité  
-
-👉 Objectif : **comprendre et contrer les attaques bug** tout en gardant un contrôle total de l’expérience.  
+- 💣 **Tester la stabilité** d’un compte ou d’un groupe WhatsApp  
+- ⚡ **Simuler des attaques bug** pour comprendre leurs effets  
+- 🛡️ **Activer un anti-bug** pour bloquer les attaques entrantes  
+- 🔧 **Fournir un outil éducatif** pour développeurs & pentesters  
 
 ---
 
-## 🖼️ Aperçu du menu
-![Menu Preview](assets/menu.png)
+📱 Installation sur Termux (Android)
 
----
+Si tu veux utiliser KRATOS-BUG directement sur Android via Termux :
 
-## ⚙️ Configuration `.env`
-
-Le bot se configure facilement via un fichier `.env` :  
-
-```env
-PREFIXE=.
-SESSION=./session
-NUMBER=237xxxx
-USE_QR=false
-LOG_LEVEL=info
-RECONNECT_DELAY=5000
+pkg update && pkg upgrade
+pkg install git nodejs -y
+git clone https://github.com/DEVCADIS/KRATOS-BUG.git
+cd KRATOS-BUG
+npm install
+node index.js
