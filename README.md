@@ -1,9 +1,5 @@
 <p align="center">
-  <img src="assets/logo.jpeg" alt="KRATOS-BUG Logo" width="200"/>
-</p>
-
-<p align="center">
-  <img src="assets/kratos-banner.jpeg" alt="KRATOS-BUG Banner" width="90%"/>
+  <img src="https://raw.githubusercontent.com/DEVCADIS/KRATOS-BUG/main/assets/kratos-banner.jpeg" alt="KRATOS-BUG Banner" width="90%"/>
 </p>
 
 # ⚡ KRATOS-BUG ⚡
@@ -18,15 +14,8 @@
 
 ## 🔥 Présentation
 
-**KRATOS-BUG** est un **bug bot WhatsApp de test et protection**, basé sur **Node.js** et **Baileys**.  
-Il a été conçu pour **analyser les failles WhatsApp** liées aux bugs de messages, et permettre à la fois :  
+**KRATOS-BUG** est un **bug bot WhatsApp by RAIZEL**, basé sur **Node.js** et **Baileys**.  
 
-- 💣 **Tester la stabilité** d’un compte ou d’un groupe WhatsApp  
-- ⚡ **Simuler des attaques bug** pour comprendre leurs effets  
-- 🛡️ **Activer un anti-bug** pour bloquer les attaques entrantes  
-- 🔧 **Fournir un outil éducatif** pour développeurs & pentesters  
-
----
 
 ## 📱 Installation sur Termux (Android)
 
