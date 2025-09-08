@@ -1195,7 +1195,7 @@ const menu = {
 │ ping  
 │ kickall  
 │ tagall  
-│ purge p
+│ purge 
 │ mute
 │ unmute
 │ kick
