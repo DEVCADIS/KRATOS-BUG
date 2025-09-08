@@ -31,10 +31,27 @@ Il a été conçu pour **analyser les failles WhatsApp** liées aux bugs de mess
 📱 Installation sur Termux (Android)
 
 Si tu veux utiliser KRATOS-BUG directement sur Android via Termux :
-
+```TERMUX 
 pkg update && pkg upgrade
 pkg install git nodejs -y
 git clone https://github.com/DEVCADIS/KRATOS-BUG.git
 cd KRATOS-BUG
 npm install
 node index.js
+
+Installation locale (PC)
+
+git clone https://github.com/DEVCADIS/KRATOS-BUG.git
+cd KRATOS-BUG
+npm install
+node index.js
+
+☁️ Déploiement sur Render (Cloud gratuit)
+
+Déploie ton bot directement sur Render :
+⚙️ Paramètres Render :
+	•	Build Command: npm install
+	•	Start Command: node index.js
+	•	Env Vars: copier les variables de ton .env
+
+
