@@ -34,7 +34,7 @@ cd KRATOS-BUG
 npm install
 node index.js
 
-☁️ Déploiement sur Render (Cloud gratuit)
+## ☁️ Déploiement sur Render (Cloud gratuit)
 
 Déploie ton bot directement sur Render :
 ⚙️ Paramètres Render :
