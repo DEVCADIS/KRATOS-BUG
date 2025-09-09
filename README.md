@@ -26,14 +26,15 @@ git clone https://github.com/DEVCADIS/KRATOS-BUG.git
 cd KRATOS-BUG
 npm install
 node index.js
+```
 
 Installation locale (PC)
-
+```bash
 git clone https://github.com/DEVCADIS/KRATOS-BUG.git
 cd KRATOS-BUG
 npm install
 node index.js
-
+```
 ## ☁️ Déploiement sur Render (Cloud gratuit)
 
 1.  Inscris-toi sur [Render](https://render.com).
@@ -63,7 +64,7 @@ Crée un fichier **`.env`** à la racine avec les variables suivantes :
 
 ``` env
 PREFIXE=.
-DOSSIER_AUTH=./session
+SESSION=./session
 NUMBER=237xxxx
 USE_QR=false
 LOG_LEVEL=info
