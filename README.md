@@ -36,8 +36,6 @@ node index.js
 
 ## ☁️ Déploiement sur Render (Cloud gratuit)
 
-## ☁️ Déploiement sur Render
-
 1.  Inscris-toi sur [Render](https://render.com).
 2.  Crée un **nouveau Web Service**, connecte ton compte GitHub et
     sélectionne le dépôt `DEVCADIS`.
@@ -65,9 +63,8 @@ Crée un fichier **`.env`** à la racine avec les variables suivantes :
 
 ``` env
 PREFIXE=.
-DOSSIER_AUTH=auth_baileys
+DOSSIER_AUTH=./session
 NUMBER=237xxxx
-OWNER=237xxxx  
 USE_QR=false
 LOG_LEVEL=info
 RECONNECT_DELAY=5000
