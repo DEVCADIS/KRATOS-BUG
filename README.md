@@ -36,17 +36,41 @@ node index.js
 
 ## ☁️ Déploiement sur Render (Cloud gratuit)
 
-Déploie ton bot directement sur Render :
-⚙️ Paramètres Render :
-	•	Build Command: npm install
-	•	Start Command: node index.js
-	•	Env Vars: copier les variables de ton .env
+## ☁️ Déploiement sur Render
 
-```.env
+1.  Inscris-toi sur [Render](https://render.com).
+2.  Crée un **nouveau Web Service**, connecte ton compte GitHub et
+    sélectionne le dépôt `DEVCADIS`.
+3.  Configure :
+    -   **Environment** : `Node`
+
+    -   **Build Command** :
+
+        ``` bash
+        npm install
+        ```
+
+    -   **Start Command** :
+
+        ``` bash
+        node index.js
+        ```
+4.  Clique sur **Deploy** pour lancer ton bot en ligne 🎉
+
+------------------------------------------------------------------------
+
+## ⚙️ Configuration
+
+Crée un fichier **`.env`** à la racine avec les variables suivantes :
+
+``` env
 PREFIXE=.
-SESSION=./session
+DOSSIER_AUTH=auth_baileys
 NUMBER=237xxxx
+OWNER=237xxxx  
 USE_QR=false
 LOG_LEVEL=info
 RECONNECT_DELAY=5000
+```
 
+------------------------------------------------------------------------
