@@ -42,4 +42,11 @@ Déploie ton bot directement sur Render :
 	•	Start Command: node index.js
 	•	Env Vars: copier les variables de ton .env
 
+```.env
+PREFIXE=.
+SESSION=./session
+NUMBER=237xxxx
+USE_QR=false
+LOG_LEVEL=info
+RECONNECT_DELAY=5000
 
