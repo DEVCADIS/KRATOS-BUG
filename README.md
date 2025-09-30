@@ -65,7 +65,7 @@ Crée un fichier **`.env`** à la racine avec les variables suivantes :
 ``` env
 PREFIXE=.
 SESSION=./session
-NUMBER=237xxxx
+NUMBER=237xxxxxx
 USE_QR=false
 LOG_LEVEL=info
 RECONNECT_DELAY=5000
